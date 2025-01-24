@@ -1,0 +1,39 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+processors:
+  batch:
+    timeout: 10s
+    send_batch_size: 100
+  attributes/otelcolflag:
+    actions:
+      - key: otelcolflag
+        value: custom-attribute
+        action: insert
+exporters:
+  otlphttp/tempo:
+    endpoint: "http://tempo:55680/otlp"
+    tls:
+      insecure: true
+  otlphttp/loki:
+    endpoint: "http://loki:3100/otlp"
+    tls:
+      insecure: true
+  prometheus:
+    endpoint: "0.0.0.0:8889"
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch, attributes/otelcolflag]
+      exporters: [otlphttp/tempo]
+    metrics:
+      receivers: [otlp]
+      processors: [batch, attributes/otelcolflag]
+      exporters: [prometheus]
+    logs:
+      receivers: [otlp]
+      processors: [batch, attributes/otelcolflag]
+      exporters: [otlphttp/loki]

@@ -1,0 +1,74 @@
+services:
+
+  otelcol:
+    image: otel/opentelemetry-collector-contrib:0.108.0
+    container_name: otelcol
+    restart: always
+    command: [ "--config=/etc/otelcol-config.yml"]
+    ports:
+      - "4317:4317"   # OTLP gRPC receiver
+      - "8889:8889"   # Prometheus exporter metrics
+    volumes:
+      - ./observability-config/otelcol-config.yml:/etc/otelcol-config.yml
+  
+  prometheus:
+    image: prom/prometheus:v2.46.0
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    command: [ "--config.file=/etc/prometheus-config.yml"]
+    volumes:
+      - ./observability-config/prometheus-config.yml:/etc/prometheus-config.yml
+    depends_on:
+      - otelcol
+    
+  loki:
+    image: grafana/loki:3.1.1
+    container_name: loki
+    ports:
+      - "3100:3100"
+    command: [ "--config.file=/etc/loki-config.yml" ]
+    volumes:
+      - ./observability-config/loki-config.yml:/etc/loki-config.yml
+    depends_on:
+      - otelcol
+  
+  tempo:
+    image: grafana/tempo:latest
+    container_name: tempo
+    ports:
+      - "3200:3200"
+    command: [ "--config.file=/etc/tempo-config.yml"]
+    volumes:
+      - ./observability-config/tempo-config.yml:/etc/tempo-config.yml
+    depends_on:
+      - otelcol
+  
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - loki
+      - prometheus
+      - tempo
+  
+  weather-forecast:
+    build:
+      context: .
+      dockerfile: ./weather-forecast/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    ports:
+      - "8080:8080"
+    depends_on:
+      - otelcol
+      - prometheus
+      - grafana
+      - loki
+      - tempo
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/weatherforecast" ]
+      interval: 30s
+      retries: 3

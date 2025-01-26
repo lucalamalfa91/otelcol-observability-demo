@@ -1,27 +1,17 @@
 server:
   http_listen_port: 3200
 
-compactor:
-  compaction:
-    block_retention: 24h
-
-storage:
-  trace:
-    backend: local
-    local:
-      path: /tmp/tempo/traces
-
-ingester:
-  lifecycler:
-    ring:
-      kvstore:
-        store: inmemory
-      replication_factor: 1
-  trace_idle_period: 30s
-
 distributor:
   receivers:
     otlp:
       protocols:
+        http:
         grpc:
-          endpoint: "0.0.0.0:4317"
+
+storage:
+  trace:
+    backend: local
+    wal:
+      path: /tmp/tempo/wal
+    local:
+      path: /tmp/tempo/blocks

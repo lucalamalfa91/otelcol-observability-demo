@@ -2,12 +2,16 @@ using weather_forecast;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Register Swagger
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-
 // Configure OpenTelemetry
 builder.ConfigureOpenTelemetry(builder.Configuration.GetSection(OpenTelemetryServiceConfig.Section));
+
+// Clear default logging providers used by WebApplication host.
+builder.Logging.ClearProviders();
+
+// Register Swagger
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
@@ -19,16 +23,13 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
-    app.Use(async (context, next) =>
-    {
-        if (context.Request.Path == "/")
-        {
-            context.Response.Redirect("/swagger/index.html");
-            return;
-        }
-        await next();
-    });
 }
+
+app.UseHttpsRedirection();
+
+app.UseAuthorization();
+
+app.MapControllers();
 
 // Error handling middleware
 app.UseExceptionHandler("/error");

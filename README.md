@@ -1,12 +1,45 @@
-# Otelcol Observability Demo
+# otelcol-observability-demo
 
 This project demonstrates the implementation of observability using OpenTelemetry Collector (otelcol), Loki, Prometheus, and Tempo.
 
 ## Project Structure
 
-- **observability-config/**: Contains configurations for observability tools.
+- **observability-config/**: Contains configurations for observability tools, centered around OpenTelemetry Collector.
 - **weather-forecast/**: A sample application for weather forecasting used to generate observable data.
 - **docker-compose.yml**: File for orchestrating Docker containers for the application and observability tools.
+
+## Architecture Overview
+
+### Core Components
+
+- **OpenTelemetry Collector (otelcol)**:
+   - Central hub for collecting telemetry data (logs, metrics, traces) from the application.
+   - Configured to export data to Prometheus, Loki, and Tempo.
+
+- **Prometheus**:
+   - Collects and stores metrics from otelcol.
+
+- **Loki**:
+   - Aggregates and stores logs forwarded by otelcol.
+
+- **Tempo**:
+   - Handles traces collected by otelcol.
+
+- **Grafana**:
+   - Provides a unified dashboard for visualizing metrics, logs, and traces.
+
+### Data Flow
+
+1. **Application to otelcol**:
+   - The `weather-forecast` app sends logs, metrics, and traces to otelcol via OTLP.
+
+2. **otelcol to Observability Tools**:
+   - Logs → Loki
+   - Metrics → Prometheus
+   - Traces → Tempo
+
+3. **Grafana**:
+   - Queries Prometheus, Loki, and Tempo for visualization.
 
 ## Prerequisites
 
@@ -18,8 +51,8 @@ This project demonstrates the implementation of observability using OpenTelemetr
 1. **Clone the repository**:
 
    ```bash
-   git clone https://github.com/lucalamalfa91/observability-demo.git
-   cd observability-demo
+   git clone https://github.com/lucalamalfa91/otelcol-observability-demo.git
+   cd otelcol-observability-demo
    ```
 
 2. **Start the services**:
@@ -55,18 +88,14 @@ This project demonstrates the implementation of observability using OpenTelemetr
 
 2. **Add data sources**:
    - **Prometheus**:
-     - URL: `http://prometheus:9090`
+      - URL: `http://prometheus:9090`
    - **Loki**:
-     - URL: `http://loki:3100`
+      - URL: `http://loki:3100`
    - **Tempo**:
-     - URL: `http://tempo:3200`
+      - URL: `http://tempo:3200`
 
 3. **Import dashboards**:
    - Go to `Create` > `Import` and enter the desired dashboard ID or upload a JSON file.
-
-## Generating Data
-
-The `weather-forecast` application generates data collected by observability tools. You can interact with the application to create various scenarios and observe how they are traced and monitored.
 
 ## Cleanup
 

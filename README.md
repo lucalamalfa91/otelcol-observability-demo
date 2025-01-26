@@ -1,4 +1,4 @@
-# Observability Demo
+# Otelcol Observability Demo
 
 This project demonstrates the implementation of observability using OpenTelemetry Collector (otelcol), Loki, Prometheus, and Tempo.
 

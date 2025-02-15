@@ -2,15 +2,26 @@ auth_enabled: false
 
 server:
   http_listen_port: 3100
-  grpc_listen_port: 9095
+  grpc_listen_port: 9096
 
 common:
+  instance_addr: 127.0.0.1
   path_prefix: /loki
   storage:
     filesystem:
-      chunks_directory: /tmp/loki/chunks
-      rules_directory: /tmp/loki/rules
+      chunks_directory: /loki/chunks
+      rules_directory: /loki/rules
   replication_factor: 1
+  ring:
+    kvstore:
+      store: inmemory
+      
+query_range:
+  results_cache:
+    cache:
+      embedded_cache:
+        enabled: true
+        max_size_mb: 100
 
 schema_config:
   configs:
@@ -31,27 +42,5 @@ ingester:
   chunk_idle_period: 5m
   chunk_retain_period: 30s
 
-storage_config:
-  boltdb_shipper:
-    active_index_directory: /tmp/loki/index
-    cache_location: /tmp/loki/cache
-
-compactor:
-  working_directory: /tmp/loki/compactor
-  compaction_interval: 10m
-
-query_range:
-  results_cache:
-    cache:
-      embedded_cache:
-        enabled: true
-
-frontend:
-  log_queries_longer_than: 5s
-  compress_responses: true
-
 ruler:
-  storage:
-    type: local
-    local:
-      directory: /tmp/loki/rules
+  alertmanager_url: http://localhost:9093

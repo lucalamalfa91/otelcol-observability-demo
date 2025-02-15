@@ -2,9 +2,9 @@ receivers:
   otlp:
     protocols:
       grpc:
-        endpoint: 0.0.0.0:4317
+        endpoint: "0.0.0.0:4317"
       http:
-        endpoint: 0.0.0.0:4318
+        endpoint: "0.0.0.0:4318"
 processors:
   batch:
     timeout: 10s
@@ -15,22 +15,22 @@ processors:
         value: custom-attribute
         action: insert
 exporters:
-  otlp/tempo:
-    endpoint: "tempo:4317"
+  otlphttp/tempo:
+    endpoint: "http://tempo:3200/otlp"
     tls:
       insecure: true
-  otlp/loki:
-    endpoint: "loki:4317"
+  otlphttp/loki:
+    endpoint: "http://loki:3100/otlp"
     tls:
       insecure: true
   prometheus:
-    endpoint: ":8889"
+    endpoint: "0.0.0.0:8889"
 service:
   pipelines:
     traces:
       receivers: [otlp]
       processors: [batch, attributes/otelcolflag]
-      exporters: [otlp/tempo]
+      exporters: [otlphttp/tempo]
     metrics:
       receivers: [otlp]
       processors: [batch, attributes/otelcolflag]
@@ -38,4 +38,4 @@ service:
     logs:
       receivers: [otlp]
       processors: [batch, attributes/otelcolflag]
-      exporters: [otlp/loki]
+      exporters: [otlphttp/loki]

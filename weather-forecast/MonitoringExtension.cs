@@ -21,56 +21,35 @@ namespace weather_forecast
                                         "unknown", // SemVer
                         serviceInstanceId: Environment.MachineName))
                 .WithLogging(logBuilder =>
-                {
-                    switch (openTelemetryServiceConfig.ExporterType)
-                    {
-                        case "otlp":
-                            logBuilder.AddOtlpExporter(otlpOptions =>
-                            {
-                                otlpOptions.Endpoint = new Uri(openTelemetryServiceConfig.Endpoint);
-                            });
-                            break;
-                        default:
-                            logBuilder.AddConsoleExporter();
-                            break;
-                    }
-                })
+                    logBuilder.AddOtlpExporter(otlpOptions =>
+                        otlpOptions.Endpoint = new Uri(openTelemetryServiceConfig.Endpoint)),
+                        options =>
+                        {
+                            options.IncludeScopes = true;
+                            options.IncludeFormattedMessage = true;
+                            options.ParseStateValues = true;
+                        }
+                )
                 .WithTracing(traceBuilder =>
                 {
                     traceBuilder
                         .AddAspNetCoreInstrumentation()
-                        .AddHttpClientInstrumentation();
-                    switch (openTelemetryServiceConfig.ExporterType)
-                    {
-                        case "otlp":
-                            traceBuilder.AddOtlpExporter(otlpOptions =>
-                            {
-                                otlpOptions.Endpoint = new Uri(openTelemetryServiceConfig.Endpoint);
-                            });
-                            break;
-                        default:
-                            traceBuilder.AddConsoleExporter();
-                            break;
-                    }
+                        .AddHttpClientInstrumentation()
+                        .AddOtlpExporter(otlpOptions =>
+                        {
+                            otlpOptions.Endpoint = new Uri(openTelemetryServiceConfig.Endpoint);
+                        });
                 })
                 .WithMetrics(metricBuilder =>
                 {
                     metricBuilder
                         .AddRuntimeInstrumentation()
                         .AddAspNetCoreInstrumentation()
-                        .AddHttpClientInstrumentation();
-                    switch (openTelemetryServiceConfig.ExporterType)
-                    {
-                        case "otlp":
-                            metricBuilder.AddOtlpExporter(otlpOptions =>
-                            {
-                                otlpOptions.Endpoint = new Uri(openTelemetryServiceConfig.Endpoint);
-                            });
-                            break;
-                        default:
-                            metricBuilder.AddConsoleExporter();
-                            break;
-                    }
+                        .AddHttpClientInstrumentation()
+                        .AddOtlpExporter(otlpOptions =>
+                        {
+                            otlpOptions.Endpoint = new Uri(openTelemetryServiceConfig.Endpoint);
+                        });
                 });
         }
     }

@@ -43,6 +43,8 @@ services:
     container_name: tempo
     ports:
       - "3200:3200"  # tempo
+      - "4317"  # OTLP gRPC
+      - "4318"  # OTLP HTTP
     command: [ "--config.file=/etc/tempo-config.yml"]
     volumes:
       - ./otelcol-observability-config/tempo-config.yml:/etc/tempo-config.yml
@@ -72,6 +74,41 @@ services:
           isDefault: true
           version: 1
           editable: true
+        - name: Prometheus
+          type: prometheus
+          access: proxy
+          url: http://prometheus:9090
+          isDefault: false
+          editable: true
+        - name: Tempo
+          type: tempo
+          access: proxy
+          url: http://tempo:3200
+          isDefault: true
+          editable: true
+          jsonData:
+            httpMethod: GET
+            tracesToLogs:
+              datasourceUid: "loki"
+              spanStartTimeShift: "1m"
+              spanEndTimeShift: "1m"
+              filterByTraceID: true
+              filterBySpanID: false
+              lokiSearch: false
+            tracesToMetrics:
+              datasourceUid: "prometheus"
+              tags: ["service.name", "deployment.environment"]
+              queries:
+                - name: "Request Rate"
+                  query: "rate(http_server_requests_total{service=\"\$service\"}[5m])"
+                - name: "Error Rate"
+                  query: "rate(http_server_requests_total{service=\"\$service\", status_code=~\"5..\"}[5m])"
+            serviceMap:
+              datasourceUid: "prometheus"
+              enable: true
+              metrics:
+                - name: "Request Rate"
+                  query: "rate(http_server_requests_total{service=\"\$service\"}[5m])"
         EOF
         /run.sh
     ports:

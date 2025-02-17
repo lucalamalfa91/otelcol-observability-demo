@@ -57,62 +57,10 @@ services:
     environment:
       - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
     container_name: grafana
-    entrypoint:
-      - sh
-      - -euc
-      - |
-        mkdir -p /etc/grafana/provisioning/datasources
-        cat <<EOF > /etc/grafana/provisioning/datasources/ds.yaml
-        apiVersion: 1
-        datasources:
-        - name: Loki
-          type: loki
-          access: proxy 
-          orgId: 1
-          url: http://loki:3100
-          basicAuth: false
-          isDefault: true
-          version: 1
-          editable: true
-        - name: Prometheus
-          type: prometheus
-          access: proxy
-          url: http://prometheus:9090
-          isDefault: false
-          editable: true
-        - name: Tempo
-          type: tempo
-          access: proxy
-          url: http://tempo:3200
-          isDefault: true
-          editable: true
-          jsonData:
-            httpMethod: GET
-            tracesToLogs:
-              datasourceUid: "loki"
-              spanStartTimeShift: "1m"
-              spanEndTimeShift: "1m"
-              filterByTraceID: true
-              filterBySpanID: false
-              lokiSearch: false
-            tracesToMetrics:
-              datasourceUid: "prometheus"
-              tags: ["service.name", "deployment.environment"]
-              queries:
-                - name: "Request Rate"
-                  query: "rate(http_server_requests_total{service=\"\$service\"}[5m])"
-                - name: "Error Rate"
-                  query: "rate(http_server_requests_total{service=\"\$service\", status_code=~\"5..\"}[5m])"
-            serviceMap:
-              datasourceUid: "prometheus"
-              enable: true
-              metrics:
-                - name: "Request Rate"
-                  query: "rate(http_server_requests_total{service=\"\$service\"}[5m])"
-        EOF
-        /run.sh
     ports:
       - "3000:3000"
+    volumes:
+      - ./otelcol-observability-config/grafana-datasources.yml:/etc/grafana/provisioning/datasources/datasources.yaml
     depends_on:
       - loki
       - prometheus
